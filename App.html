@@ -1,357 +1,9 @@
-<div class="buttons">
-  <input class="thingy" id="clear" type="button" value="clear" />
-  <input class="thingy" id="Glider" type="button" value="Glider" />
-  <input class="thingy" id="GliderGun" type="button" value="GliderGun" />
-  <label class="switch">
-    <input type="checkbox">
-    <span class="slider"></span>
-  </label>
-  <input class="thingy" id="DieHard" type="button" value="DieHard" />
-  <input class="thingy" id="Ark" type="button" value="Ark" />
-  <input class="thingy" id="warning" type="button" value="WARNING" />
-  <input class="thingy" id="random" type="button" value="random" />
-  <input class="thingy" id="paused" type="button" value="pause" />
-</div>
-<div class="slidecontainer">
-  <div class="speed">Speed</div>
-  <input type="range" min="1" max="100" value="1" class="slidery" id="myRange">
-</div>
-
-<body>
-  <div class="cell" id="cell-container"></div>
-</body>
-
-
-<script type="text/javascript">
-  window.onload = function () {
-    size = 150;
-    let paused = false;
-    let interval = 1;
-    const cellContainer = document.getElementById("cell-container")
-    const rows = size;
-    const cols = size;
-    function createBoard() {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          let cell = document.createElement("div");
-          cell.classList.add("cell");
-          cell.id = (r * size + c);
-          cell.onclick = (e) => click(e.currentTarget.id);
-          cellContainer.appendChild(cell);
-        }
-      }
-    }
-
-    createBoard();
-    let boardArray = Array.from(cellContainer.children)
-    console.log(boardArray)
-
-    function checkNeighbors(board, r, c) {
-      //console.log(c, r)
-      let checkSurroundingsUp = null;
-      let checkSurroundingsDown = null;
-      let checkSurroundingsLeft = null;
-      let checkSurroundingsRight = null;
-      let checkSurroundingsUpLeft = null;
-      let checkSurroundingsUpRight = null;
-      let checkSurroundingsDownLeft = null;
-      let checkSurroundingsDownRight = null;
-      checkSurroundingsUp = board[(r - 1) * size + c].classList.value;
-      checkSurroundingsDown = board[(r + 1) * size + c].classList.value;
-      checkSurroundingsLeft = board[r * size + c - 1].classList.value;
-      checkSurroundingsRight = board[r * size + c + 1].classList.value;
-      checkSurroundingsUpLeft = board[(r - 1) * size + c - 1].classList.value;
-      checkSurroundingsUpRight = board[(r - 1) * size + c + 1].classList.value;
-      checkSurroundingsDownLeft = board[(r + 1) * size + c - 1].classList.value;
-      checkSurroundingsDownRight = board[(r + 1) * size + c + 1].classList.value;
-      let result = 0;
-      if (checkSurroundingsUp != "cell") {
-        result++;
-      }
-      if (checkSurroundingsDown != "cell") {
-        result++;
-      }
-      if (checkSurroundingsLeft != "cell") {
-        result++;
-      }
-      if (checkSurroundingsRight != "cell") {
-        result++;
-      }
-      if (checkSurroundingsUpLeft != "cell") {
-        result++;
-      }
-      if (checkSurroundingsUpRight != "cell") {
-        result++;
-      }
-      if (checkSurroundingsDownLeft != "cell") {
-        result++;
-      }
-      if (checkSurroundingsDownRight != "cell") {
-        result++;
-      }
-      //console.log(result);
-      return result;
-    }
-    function loop() {
-
-      //console.log(event.currentTarget)
-      if (paused)
-        return;
-      if (count != interval) {
-        count++;
-        //console.log(count);
-        return;
-      }
-      count = 0;
-      var markSquare = Array.from(Array(size), () => new Array(size))
-
-      for (let i = 1; i < cols - 1; i++) {
-        for (let j = 1; j < rows - 1; j++) {
-          let result = checkNeighbors(boardArray, i, j);
-          if (result <= 1 || result >= 4) {
-            markSquare[i][j] = "cell";
-          }
-          else if (result == 3) {
-            markSquare[i][j] = "alive";
-          } else {
-            markSquare[i][j] = boardArray[i * size + j].classList.value;
-          }
-        }
-      }
-      for (let i = 1; i < cols - 1; i++) {
-        for (let j = 1; j < rows - 1; j++) {
-          //console.log(markSquare[i][j])
-          boardArray[i * size + j].classList.value = markSquare[i][j];
-        }
-      }
-      drawBoard(boardArray);
-      //setTimeout(() => { console.log("World!"); }, 2000);
-      //console.log("drew te board");
-    }
-    function drawBoard(board) {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          board[r * size + c]
-        }
-      }
-    }
-    function makeGlider() {
-      let c = 1;
-      let r = 1;
-      boardArray[(r) * size + c].classList.value = "alive";
-      boardArray[(r + 1) * size + c + 1].classList.value = "alive";
-      boardArray[(r + 2) * size + c + 1].classList.value = "alive";
-      boardArray[(r + 1) * size + c + 2].classList.value = "alive";
-      boardArray[(r + 2) * size + c].classList.value = "alive";
-    }
-    function makeDieHard() {
-      let x = 25;
-      let y = 25;
-      boardArray[(x) * size + y + 1].classList.value = "alive"
-      boardArray[(x + 1) * size + y + 1].classList.value = "alive"
-      boardArray[(x + 1) * size + y + 2].classList.value = "alive"
-      boardArray[(x + 6) * size + y + 0].classList.value = "alive"
-      boardArray[(x + 5) * size + y + 2].classList.value = "alive"
-      boardArray[(x + 6) * size + y + 2].classList.value = "alive"
-      boardArray[(x + 7) * size + y + 2].classList.value = "alive"
-
-    }
-    function makeArk() {
-      let x = 5;
-      let y = 5;
-      boardArray[(x + 6) * size + y + 28].classList.value = "alive"
-      boardArray[(x + 7) * size + y + 28].classList.value = "alive"
-      boardArray[(x + 8) * size + y + 29].classList.value = "alive"
-      boardArray[(x + 8) * size + y + 30].classList.value = "alive"
-      boardArray[(x + 9) * size + y + 31].classList.value = "alive"
-      boardArray[(x + 10) * size + y + 31].classList.value = "alive"
-      boardArray[(x + 11) * size + y + 31].classList.value = "alive"
-      boardArray[(x + 12) * size + y + 31].classList.value = "alive"
-      boardArray[(x + 33) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 33) * size + y + 7].classList.value = "alive"
-      boardArray[(x + 34) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 34) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 35) * size + y + 5].classList.value = "alive"
-      boardArray[(x + 35) * size + y + 8].classList.value = "alive"
-      boardArray[(x + 36) * size + y + 8].classList.value = "alive"
-      boardArray[(x + 37) * size + y + 8].classList.value = "alive"
-    }
-    function clear() {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          boardArray[r * size + c].classList.value = "cell";
-        }
-      }
-    }
-    function makeGliderGun() {
-      //console.log("iegihaoghio");
-      let x = 5;
-      let y = 5;
-      boardArray[(x + 26) * size + y + 1].classList.value = "alive"
-      boardArray[(x + 26) * size + y + 2].classList.value = "alive"
-      boardArray[(x + 26) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 26) * size + y + 7].classList.value = "alive"
-      boardArray[(x + 24) * size + y + 2].classList.value = "alive"
-      boardArray[(x + 24) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 23) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 23) * size + y + 5].classList.value = "alive"
-      boardArray[(x + 22) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 22) * size + y + 5].classList.value = "alive"
-      boardArray[(x + 22) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 23) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 36) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 36) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 37) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 37) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 19) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 18) * size + y + 5].classList.value = "alive"
-      boardArray[(x + 18) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 18) * size + y + 7].classList.value = "alive"
-      boardArray[(x + 17) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 17) * size + y + 8].classList.value = "alive"
-      boardArray[(x + 16) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 15) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 26) * size + y + 1].classList.value = "alive"
-      boardArray[(x + 15) * size + y + 9].classList.value = "alive"
-      boardArray[(x + 14) * size + y + 3].classList.value = "alive"
-      boardArray[(x + 14) * size + y + 9].classList.value = "alive"
-      boardArray[(x + 13) * size + y + 4].classList.value = "alive"
-      boardArray[(x + 13) * size + y + 8].classList.value = "alive"
-      boardArray[(x + 12) * size + y + 5].classList.value = "alive"
-      boardArray[(x + 12) * size + y + 6].classList.value = "alive"
-      boardArray[(x + 12) * size + y + 7].classList.value = "alive"
-      boardArray[(x + 2) * size + y + 5].classList.value = "alive";
-      boardArray[(x + 2) * size + y + 6].classList.value = "alive";
-      boardArray[(x + 3) * size + y + 5].classList.value = "alive";
-      boardArray[(x + 3) * size + y + 6].classList.value = "alive";
-    }
-    function pause() {
-      //console.log("paused");
-      paused = !paused
-    }
-    function random() {
-      for (let r = 1; r < rows - 10; r++) {
-        for (let c = 1; c < cols - 1; c++) {
-          if (Math.floor(Math.random() * 10) % 3 == 1)
-            boardArray[(r) * size + c].classList.value = "alive"
-        }
-      }
-    }
-    function warning() {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          boardArray[(r) * size + c].classList.value = "alive"
-        }
-      }
-    }
-    function click(clicked_id) {
-       GliderToggle (clicked_id);
-      boardArray[clicked_id].classList.value = "alive"
-
-    }
-
-    // function click (clicked_id){
-    //   return (clicked_id);
-    // }
-    function GliderToggle(x) {
-      let c = x;
-      let r = 5;
-      boardArray[(r) * size + c].classList.value = "alive";
-      boardArray[(r + 1) * size + c + 1].classList.value = "alive";
-      boardArray[(r + 2) * size + c + 1].classList.value = "alive";
-      boardArray[(r + 1) * size + c + 2].classList.value = "alive";
-      boardArray[(r + 2) * size + c].classList.value = "alive";
-    }
-
-    var slider = document.getElementById("myRange");
-    let count = 0;
-    slider.oninput = function () {
-      count = count % this.value;
-      interval = this.value;
-      //console.log(interval);
-    }
-
-    setInterval(loop, 1)
-    document.getElementById("Glider").onclick = makeGlider;
-    document.getElementById("GliderGun").onclick = makeGliderGun;
-    document.getElementById("DieHard").onclick = makeDieHard;
-    document.getElementById("clear").onclick = clear;
-    document.getElementById("warning").onclick = warning;
-    document.getElementById("random").onclick = random;
-    document.getElementById("paused").onclick = pause;
-    document.getElementById("Ark").onclick = makeArk;
-    //document.getElementById("GliderToggle").onclick = GliderToggle;
-    
-  }
-
-</script>
-
-
-
-
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body {
-    width: 100%;
-    height: 100%;
-    margin: 0px;
-    background-image: rgb(0, 0, 0)
-  }
-
-  .speed {
-    color: white;
-  }
-
-  .buttons {
-    text-align: center;
-    background-color: black;
-  }
-
-  #cell-container {
-    display: grid;
-    grid-template-rows: repeat(150, 1fr);
-    grid-template-columns: repeat(150, 1fr);
-    width: 100%;
-    height: 100%;
-    background-color: black
-  }
-
-  .slidecontainer {
-    text-align: center;
-    background-color: black;
-
-  }
-
-  #Div1 {
-    background-color: rgb(0, 0, 0);
-  }
-
-  .cell {
-    width: auto;
-    height: auto;
-    background-color: black;
-    outline: 1px dotted rgb(165, 165, 165);
-  }
-
-  .thingy {
-    background-color: darkgrey;
-    /* Green */
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-  }
-
-  .thingy:hover {
-    box-shadow: 0 12px 16px 0 rgba(255, 255, 255, 0.24), 0 17px 50px 0 rgba(124, 124, 124, 0.19);
-  }
-
-  .alive {
-    background-color: rgb(255, 60, 190)
-  }
-  .switch {
+.switch {
   position: relative;
   display: inline-block;
   width: 60px;
@@ -401,4 +53,40 @@ input:checked + .slider:before {
   -ms-transform: translateX(26px);
   transform: translateX(26px);
 }
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
 </style>
+</head>
+<body>
+
+<h2>Toggle Switch</h2>
+
+<label class="switch">
+  <input type="checkbox">
+  <span class="slider"></span>
+</label>
+
+<label class="switch">
+  <input type="checkbox" checked>
+  <span class="slider"></span>
+</label><br><br>
+
+<label class="switch">
+  <input type="checkbox">
+  <span class="slider round"></span>
+</label>
+
+<label class="switch">
+  <input type="checkbox" checked>
+  <span class="slider round"></span>
+</label>
+
+</body>
+</html> 
