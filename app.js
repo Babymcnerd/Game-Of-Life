@@ -1,71 +1,246 @@
+let selector;
+let paused;
+let cleared;
+let logged;
+let drawNum;
+let boardOriginal;
+let skip;
+let checkSkip;
 window.onload = main;
-
 function main() {
-    let canvasSize = 500;
-    const cellSize = 5;
+    let canvasSize = 1000;
+    const cellSize = 2;
+    selector = document.getElementById('selector');
+    paused = document.getElementById('paused');
+    cleared = document.getElementById('clear');
+    logged = document.getElementById('log');
+    skip = document.getElementById('skipAmount');
+    drawNum = skip.value;
+    checkSkip = skip.value;
     const boardSize = (canvasSize / cellSize);
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    canvas.addEventListener('mousedown', (e) => mouseClick(e, board, ctx, cellSize), false);
     init(canvas, ctx, canvasSize);
     var board = new Array(boardSize);
-
+    boardOriginal = new Array(boardSize);
     for (var i = 0; i < boardSize; i++) {
+        boardOriginal[i] = new Array(boardSize);
+    }
+    for (i = 0; i < boardSize; i++) {
         board[i] = new Array(boardSize);
     }
-    for (let x = 2; x < boardSize - 2; x++) {
-        for (let y = 2; y < boardSize - 2; y++) {
-            // board[x][y] = false;
-            if (Math.floor(Math.random() * 10) == 1) {
-                board[x][y] = true;
-            } else
-                board[x][y] = false;
-        }
-    }
-    document.getElementById("Ark").onclick = () => makeArk(board);
-    setInterval(() => loop(boardSize, canvas, ctx, cellSize, canvasSize, board), 1);
-}
-
-function loop(boardSize, canvas, ctx, cellSize, canvasSize, board) {
-    // console.log("started loop")
     var boardCheck = new Array(boardSize);
     for (var l = 0; l < boardSize; l++) {
         boardCheck[l] = new Array(boardSize);
     }
-    //ctx.clearRect(0, 0, boardSize, boardSize);
-    for (let i = 1; i < boardSize - 1; i++) {
-        for (let j = 1; j < boardSize - 1; j++) {
-            let result = checkNeighbors(board, i, j);
-            if (result <= 1 || result >= 4) {
-                boardCheck[i][j] = false;
-            } else if (result == 3) {
-                boardCheck[i][j] = true;
-            } else {
-                boardCheck[i][j] = board[i][j];
+    for (let x = 2; x < boardSize - 2; x++) {
+        for (let y = 2; y < boardSize - 2; y++) {
+            board[x][y] = false;
+            boardOriginal[x][y] = false;
+        }
+    }
+    logged.onclick = () => log(board, boardSize);
+    cleared.onclick = () => clear(board, boardSize, ctx, canvasSize);
+    setInterval(() => loop(boardSize, canvas, ctx, cellSize, canvasSize, board, boardCheck), 1);
+}
+function loop(boardSize, canvas, ctx, cellSize, canvasSize, board, boardCheck) {
+    if (checkSkip != skip.value){
+        drawNum = skip.value;
+        checkSkip = skip.value;
+    }
+    if (!paused.checked) {
+        // console.log("started loop")
+        for (let i = 1; i < boardSize - 1; i++) {
+            for (let j = 1; j < boardSize - 1; j++) {
+                let result = checkNeighbors(board, i, j);
+                if (result <= 1 || result >= 4) {
+                    boardCheck[i][j] = false;
+                } else if (result == 3) {
+                    boardCheck[i][j] = true;
+                } else {
+                    boardCheck[i][j] = board[i][j];
+                }
+            }
+        }
+        for (let x = 0; x < boardSize; x++) {
+            for (let y = 0; y < boardSize; y++) {
+                board[x][y] = boardCheck[x][y];
+            }
+        }
+    }
+    if (drawNum == 0) {
+        drawNum = skip.value;
+        drawBoard(board, ctx, cellSize, boardSize, canvasSize);
+    }
+    drawNum--;
+}
+function mouseClick(e, board, ctx, cellSize, boardSize) {
+    var mouseX, mouseY;
+
+    if (e.offsetX) {
+        mouseX = e.offsetX;
+        mouseY = e.offsetY;
+    }
+    else if (e.layerX) {
+        mouseX = e.layerX;
+        mouseY = e.layerY;
+    }
+    var gridX = Math.floor(mouseX / cellSize);
+    var gridY = Math.floor(mouseY / cellSize);
+    makeOnClick(gridX, gridY, board, boardSize);
+}
+function drawBoard(board, ctx, cellSize, boardSize, canvasSize) {
+    //ctx.clearRect(0, 0, canvasSize, canvasSize);
+    
+    for (let x = 0; x < boardSize; x++) {
+        for (let y = 0; y < boardSize; y++) {
+            if (boardOriginal[x][y] != board[x][y]) {
+                if (board[x][y]) {
+                    ctx.fillStyle = '#302BA3';
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                } 
+                else {
+                    ctx.fillStyle = '#2BA330';
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
             }
         }
     }
     for (let x = 0; x < boardSize; x++) {
         for (let y = 0; y < boardSize; y++) {
-            board[x][y] = boardCheck[x][y];
-        }
-    }
-    drawBoard(board, ctx, cellSize, boardSize);
-}
-
-function drawBoard(board, ctx, cellSize, boardSize) {
-    for (let x = 0; x < boardSize; x++) {
-        for (let y = 0; y < boardSize; y++) {
-            if (board[x][y]) {
-                ctx.fillStyle = '#b381ff';
-                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-            } else {
-                ctx.fillStyle = '#ffd981';
-                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-            }
+            boardOriginal[x][y] = board[x][y];
         }
     }
 }
-
+function log(board, boardSize) {
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++)
+            if (board[i][j])
+                console.log("board[gridX + " + i + "][gridY + " + j + "] = true;");
+    }
+}
+function makeSpaceship(gridX, gridY, board) {
+    board[gridX + 0][gridY + 39] = true;
+    board[gridX + 1][gridY + 37] = true;
+    board[gridX + 1][gridY + 38] = true;
+    board[gridX + 1][gridY + 40] = true;
+    board[gridX + 1][gridY + 41] = true;
+    board[gridX + 4][gridY + 36] = true;
+    board[gridX + 4][gridY + 37] = true;
+    board[gridX + 4][gridY + 38] = true;
+    board[gridX + 4][gridY + 40] = true;
+    board[gridX + 4][gridY + 41] = true;
+    board[gridX + 4][gridY + 42] = true;
+    board[gridX + 5][gridY + 36] = true;
+    board[gridX + 5][gridY + 37] = true;
+    board[gridX + 5][gridY + 41] = true;
+    board[gridX + 5][gridY + 42] = true;
+    board[gridX + 6][gridY + 32] = true;
+    board[gridX + 6][gridY + 33] = true;
+    board[gridX + 6][gridY + 34] = true;
+    board[gridX + 6][gridY + 44] = true;
+    board[gridX + 6][gridY + 45] = true;
+    board[gridX + 6][gridY + 46] = true;
+    board[gridX + 8][gridY + 32] = true;
+    board[gridX + 8][gridY + 34] = true;
+    board[gridX + 8][gridY + 44] = true;
+    board[gridX + 8][gridY + 46] = true;
+    board[gridX + 9][gridY + 34] = true;
+    board[gridX + 9][gridY + 35] = true;
+    board[gridX + 9][gridY + 43] = true;
+    board[gridX + 9][gridY + 44] = true;
+    board[gridX + 10][gridY + 34] = true;
+    board[gridX + 10][gridY + 44] = true;
+    board[gridX + 11][gridY + 33] = true;
+    board[gridX + 11][gridY + 34] = true;
+    board[gridX + 11][gridY + 44] = true;
+    board[gridX + 11][gridY + 45] = true;
+    board[gridX + 12][gridY + 34] = true;
+    board[gridX + 12][gridY + 44] = true;
+    board[gridX + 13][gridY + 34] = true;
+    board[gridX + 13][gridY + 37] = true;
+    board[gridX + 13][gridY + 41] = true;
+    board[gridX + 13][gridY + 44] = true;
+    board[gridX + 14][gridY + 34] = true;
+    board[gridX + 14][gridY + 37] = true;
+    board[gridX + 14][gridY + 41] = true;
+    board[gridX + 14][gridY + 44] = true;
+    board[gridX + 15][gridY + 32] = true;
+    board[gridX + 15][gridY + 34] = true;
+    board[gridX + 15][gridY + 35] = true;
+    board[gridX + 15][gridY + 43] = true;
+    board[gridX + 15][gridY + 44] = true;
+    board[gridX + 15][gridY + 46] = true;
+    board[gridX + 16][gridY + 31] = true;
+    board[gridX + 16][gridY + 33] = true;
+    board[gridX + 16][gridY + 45] = true;
+    board[gridX + 16][gridY + 47] = true;
+    board[gridX + 18][gridY + 33] = true;
+    board[gridX + 18][gridY + 45] = true;
+    board[gridX + 19][gridY + 33] = true;
+    board[gridX + 19][gridY + 45] = true;
+    board[gridX + 20][gridY + 33] = true;
+    board[gridX + 20][gridY + 45] = true;
+    board[gridX + 21][gridY + 32] = true;
+    board[gridX + 21][gridY + 33] = true;
+    board[gridX + 21][gridY + 45] = true;
+    board[gridX + 21][gridY + 46] = true;
+    board[gridX + 22][gridY + 32] = true;
+    board[gridX + 22][gridY + 33] = true;
+    board[gridX + 22][gridY + 45] = true;
+    board[gridX + 22][gridY + 46] = true;
+    board[gridX + 23][gridY + 33] = true;
+    board[gridX + 23][gridY + 35] = true;
+    board[gridX + 23][gridY + 36] = true;
+    board[gridX + 23][gridY + 37] = true;
+    board[gridX + 23][gridY + 41] = true;
+    board[gridX + 23][gridY + 42] = true;
+    board[gridX + 23][gridY + 43] = true;
+    board[gridX + 23][gridY + 45] = true;
+    board[gridX + 24][gridY + 35] = true;
+    board[gridX + 24][gridY + 36] = true;
+    board[gridX + 24][gridY + 37] = true;
+    board[gridX + 24][gridY + 41] = true;
+    board[gridX + 24][gridY + 42] = true;
+    board[gridX + 24][gridY + 43] = true;
+    board[gridX + 25][gridY + 35] = true;
+    board[gridX + 25][gridY + 36] = true;
+    board[gridX + 25][gridY + 42] = true;
+    board[gridX + 25][gridY + 43] = true;
+    board[gridX + 26][gridY + 34] = true;
+    board[gridX + 26][gridY + 35] = true;
+    board[gridX + 26][gridY + 43] = true;
+    board[gridX + 26][gridY + 44] = true;
+    board[gridX + 27][gridY + 36] = true;
+    board[gridX + 27][gridY + 42] = true;
+    board[gridX + 28][gridY + 33] = true;
+    board[gridX + 28][gridY + 45] = true;
+    board[gridX + 29][gridY + 33] = true;
+    board[gridX + 29][gridY + 34] = true;
+    board[gridX + 29][gridY + 44] = true;
+    board[gridX + 29][gridY + 45] = true;
+    board[gridX + 31][gridY + 32] = true;
+    board[gridX + 31][gridY + 34] = true;
+    board[gridX + 31][gridY + 35] = true;
+    board[gridX + 31][gridY + 43] = true;
+    board[gridX + 31][gridY + 44] = true;
+    board[gridX + 31][gridY + 46] = true;
+    board[gridX + 32][gridY + 31] = true;
+    board[gridX + 32][gridY + 34] = true;
+    board[gridX + 32][gridY + 35] = true;
+    board[gridX + 32][gridY + 43] = true;
+    board[gridX + 32][gridY + 44] = true;
+    board[gridX + 32][gridY + 47] = true;
+    board[gridX + 33][gridY + 30] = true;
+    board[gridX + 33][gridY + 34] = true;
+    board[gridX + 33][gridY + 35] = true;
+    board[gridX + 33][gridY + 43] = true;
+    board[gridX + 33][gridY + 44] = true;
+    board[gridX + 33][gridY + 48] = true;
+    board[gridX + 34][gridY + 31] = true;
+    board[gridX + 34][gridY + 47] = true
+}
 function checkNeighbors(board, cord1, cord2) {
     let r = cord1 - 1
     let c = cord2 - 1
@@ -81,31 +256,57 @@ function checkNeighbors(board, cord1, cord2) {
     // console.log(result);
     return result;
 }
-
-function makeArk(board) {
-    let x = 5;
-    let y = 5;
-    board[(x + 6)][y + 28] = true;
-    board[(x + 7)][y + 28] = true;
-    board[(x + 8)][y + 29] = true;
-    board[(x + 8)][y + 30] = true;
-    board[(x + 9)][y + 31] = true;
-    board[(x + 10)][y + 31] = true;
-    board[(x + 11)][y + 31] = true;
-    board[(x + 12)][y + 31] = true;
-    board[(x + 33)][y + 3] = true;
-    board[(x + 33)][y + 7] = true;
-    board[(x + 34)][y + 4] = true;
-    board[(x + 34)][y + 6] = true;
-    board[(x + 35)][y + 5] = true;
-    board[(x + 35)][y + 8] = true;
-    board[(x + 36)][y + 8] = true;
-    board[(x + 37)][y + 8] = true;
+function makeArk(gridX, gridY, board) {
+    board[(gridX + 6)][gridY + 28] = true;
+    board[(gridX + 7)][gridY + 28] = true;
+    board[(gridX + 8)][gridY + 29] = true;
+    board[(gridX + 8)][gridY + 30] = true;
+    board[(gridX + 9)][gridY + 31] = true;
+    board[(gridX + 10)][gridY + 31] = true;
+    board[(gridX + 11)][gridY + 31] = true;
+    board[(gridX + 12)][gridY + 31] = true;
+    board[(gridX + 33)][gridY + 3] = true;
+    board[(gridX + 33)][gridY + 7] = true;
+    board[(gridX + 34)][gridY + 4] = true;
+    board[(gridX + 34)][gridY + 6] = true;
+    board[(gridX + 35)][gridY + 5] = true;
+    board[(gridX + 35)][gridY + 8] = true;
+    board[(gridX + 36)][gridY + 8] = true;
+    board[(gridX + 37)][gridY + 8] = true;
 }
-
+function makeWarning(board, boardSize){
+    for (let x = 2; x < board.length - 2; x++) {
+        for (let y = 2; y < board.length - 2; y++) {
+                board[x][y] = true;
+        }
+    }
+}
 function init(canvas, ctx, size) {
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = '#FFFC24';
     canvas.width = size;
     canvas.height = size;
-    ctx.fillRect(0, 0, size, size);
+   //ctx.fillRect(0, 0, size, size);
+}
+function clear(board, boardSize, ctx, canvasSize) {
+    console.log ("cleaerd")
+    for (let x = 0; x < boardSize; x++) {
+        for (let y = 0; y < boardSize; y++) {
+            board[x][y] = false;
+            boardOriginal[x][y] = false;
+        }
+    }
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+    ctx.clearRect(0, 0, canvasSize, canvasSize);
+}
+function makeOnClick(gridX, gridY, board, boardSize) {
+    // console.log ("gone in here");
+    if (selector.value == 0)
+        board[gridX][gridY] = !board[gridX][gridY];
+    else if (selector.value == 1)
+        makeArk(gridX - 20, gridY - 20, board);
+    else if (selector.value == 2)
+        makeSpaceship(gridX, gridY - 39, board)
+    else if (selector.value == 3)
+        makeWarning(board, boardSize)
+
 }
