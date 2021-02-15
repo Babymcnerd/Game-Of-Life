@@ -8,8 +8,8 @@ let skip;
 let checkSkip;
 window.onload = main;
 function main() {
-    let canvasSize = 1000;
-    const cellSize = 2;
+    let canvasSize = 4500;
+    const cellSize = 4;
     selector = document.getElementById('selector');
     paused = document.getElementById('paused');
     cleared = document.getElementById('clear');
@@ -45,7 +45,7 @@ function main() {
     setInterval(() => loop(boardSize, canvas, ctx, cellSize, canvasSize, board, boardCheck), 1);
 }
 function loop(boardSize, canvas, ctx, cellSize, canvasSize, board, boardCheck) {
-    if (checkSkip != skip.value){
+    if (checkSkip != skip.value) {
         drawNum = skip.value;
         checkSkip = skip.value;
     }
@@ -92,16 +92,16 @@ function mouseClick(e, board, ctx, cellSize, boardSize) {
 }
 function drawBoard(board, ctx, cellSize, boardSize, canvasSize) {
     //ctx.clearRect(0, 0, canvasSize, canvasSize);
-    
+
     for (let x = 0; x < boardSize; x++) {
         for (let y = 0; y < boardSize; y++) {
             if (boardOriginal[x][y] != board[x][y]) {
                 if (board[x][y]) {
                     ctx.fillStyle = '#302BA3';
                     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                } 
+                }
                 else {
-                    ctx.fillStyle = '#2BA330';
+                    ctx.fillStyle = '#FFFC24';
                     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
                 }
             }
@@ -274,21 +274,76 @@ function makeArk(gridX, gridY, board) {
     board[(gridX + 36)][gridY + 8] = true;
     board[(gridX + 37)][gridY + 8] = true;
 }
-function makeWarning(board, boardSize){
+function makeWarning(board, boardSize) {
     for (let x = 2; x < board.length - 2; x++) {
         for (let y = 2; y < board.length - 2; y++) {
-                board[x][y] = true;
+            board[x][y] = true;
         }
     }
+}
+function decodeRLE(rle, board, gridX, gridY) {
+    // let lines = rle.split("\n");
+    // let first = lines[0].replace( /\s/g, '');
+    // let width = first.split(",")[0].substring(2);
+    // let height = first.split(",")[1].substring(2);
+    let cells = [];
+    let x = 0;
+    let y = 0;
+    let runCount = 1;
+    let cellInfo = rle.replace( /\s/g, '');
+    // let cellInfo = lines.slice(1).join().replace( /\s/g, '');
+    for (let i = 0; i < cellInfo.length; i++) {
+    if (cellInfo[i] == "b") {
+        x += runCount;
+        console.log(runCount+"b");
+        runCount = 1;
+    } else if (cellInfo[i] == "o") {
+        for (let z = 0; z < runCount; z++) {
+        console.log("adding: " + x + ", " + y);
+        cells.push([x, y])
+        x++;
+        }
+        runCount = 1;
+        console.log(runCount+"o");
+    } else if (cellInfo[i] == "$") {
+        x = 0;
+        y += runCount;
+        runCount = 1;
+        console.log("$");
+    } else if (isNumber(cellInfo[i])) {
+        let j = i+1;
+        let originalI = i;
+        while (isNumber(cellInfo[j])) {
+        j++;
+        i++;
+        }
+        runCount = parseInt(cellInfo.substring(originalI, j));
+        //console.log(cellInfo.substring(i+1))
+        console.log(parseInt(cellInfo.substring(originalI, j)));
+    }
+    }
+    console.log(cells);
+    cell2Board(cells, board, gridX, gridY);
+}
+function cell2Board(cells, board, gridX, gridY) {
+    let newArray;
+    for (let i = 0; i < cells.length; i++) {
+        newArray = cells[i];
+        console.log(newArray[0] + " " + newArray[1]);
+        board[newArray[0] + gridX][newArray[1] + gridY] = true;
+    }
+}
+function isNumber(str) {
+    return !isNaN(str) && !isNaN(parseFloat(str));
 }
 function init(canvas, ctx, size) {
     ctx.fillStyle = '#FFFC24';
     canvas.width = size;
     canvas.height = size;
-   //ctx.fillRect(0, 0, size, size);
+    //ctx.fillRect(0, 0, size, size);
 }
 function clear(board, boardSize, ctx, canvasSize) {
-    console.log ("cleaerd")
+    console.log("cleaerd")
     for (let x = 0; x < boardSize; x++) {
         for (let y = 0; y < boardSize; y++) {
             board[x][y] = false;
@@ -308,5 +363,8 @@ function makeOnClick(gridX, gridY, board, boardSize) {
         makeSpaceship(gridX, gridY - 39, board)
     else if (selector.value == 3)
         makeWarning(board, boardSize)
+    else if (selector.value == 4) {
+        decodeRLE(document.getElementById("decoder").value, board, gridX, gridY);
+    }
 
 }
